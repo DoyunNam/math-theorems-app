@@ -60,6 +60,22 @@ function App() {
     setTheorems(updated);
   };
 
+  const handleExport = () => {
+    const data = localStorage.getItem("theoremList");
+    if (!data) {
+      alert("저장된 데이터가 없습니다.");
+      return;
+    }
+
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "theoremList.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <MathJaxContext config={config}>
       <div className="flex flex-col items-center max-w-4xl mx-auto px-4 py-8 space-y-6">
@@ -76,6 +92,49 @@ function App() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md"
         />
+        {/* 🔽 JSON 내보내기 / 가져오기 버튼들 */}
+        <div className="w-full max-w-3xl flex justify-end gap-2">
+          <button
+            onClick={handleExport}
+            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
+          >
+            📤 JSON 내보내기
+          </button>
+
+          <label
+            htmlFor="file-upload"
+            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition cursor-pointer"
+          >
+            📥 JSON 가져오기
+          </label>
+          <input
+            id="file-upload"
+            type="file"
+            accept="application/json"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                try {
+                  const json = JSON.parse(event.target.result);
+                  if (Array.isArray(json)) {
+                    setTheorems(json);
+                    localStorage.setItem("theoremList", JSON.stringify(json));
+                    alert("✅ JSON 데이터를 성공적으로 불러왔습니다!");
+                  } else {
+                    alert("⚠️ JSON 형식이 올바르지 않습니다.");
+                  }
+                } catch (err) {
+                  alert("❌ JSON 파일을 읽는 중 오류가 발생했습니다.");
+                }
+              };
+              reader.readAsText(file);
+            }}
+            className="hidden"
+          />
+        </div>
 
         <div className="flex flex-wrap items-center gap-4 mb-6 w-full max-w-3xl">
           <input
