@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { MathJaxContext, MathJax } from "better-react-mathjax";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "./firebase";
+import Login from "./Login";
+import { signOut } from "firebase/auth";
 
 const config = {
   loader: { load: ["[tex]/ams"] },
@@ -9,6 +13,7 @@ const config = {
 };
 
 function App() {
+  const [user] = useAuthState(auth); // 로그인된 사용자 정보
   const [theoremName, setTheoremName] = useState("");
   const [proofSeen, setProofSeen] = useState(false);
   const [theorems, setTheorems] = useState([]);
@@ -79,9 +84,29 @@ function App() {
   return (
     <MathJaxContext config={config}>
       <div className="flex flex-col items-center max-w-4xl mx-auto px-4 py-8 space-y-6">
+        {user && (
+          <div className="w-full flex justify-end items-center space-x-4 mb-2 text-sm text-gray-600">
+            <span>👋 {user.displayName}님 환영합니다!</span>
+            <button
+              onClick={() => signOut(auth)}
+              className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300"
+            >
+              로그아웃
+            </button>
+          </div>
+        )}
+
+        <Login />
         <h1 className="text-3xl font-bold text-blue-700">
           📚 수학 정리 분류 앱
         </h1>
+        <div className="w-full flex justify-between items-center">
+          {user && (
+            <p className="text-sm text-gray-700">
+              👋 {user.displayName}님 환영합니다!
+            </p>
+          )}
+        </div>
         <p className="text-gray-700 text-lg">
           정리 이름을 입력하고, 증명을 본 적이 있는지 표시해보세요.
         </p>
@@ -135,7 +160,6 @@ function App() {
             className="hidden"
           />
         </div>
-
         <div className="flex flex-wrap items-center gap-4 mb-6 w-full max-w-3xl">
           <input
             type="text"
@@ -160,7 +184,6 @@ function App() {
             {editIndex !== null ? "수정" : "추가"}
           </button>
         </div>
-
         <table className="w-full border border-gray-300 text-left table-fixed">
           <thead className="bg-gray-100">
             <tr>
